@@ -1,4 +1,4 @@
-# react-amap
+# react-map-comp
 
 ## Getting Started
 

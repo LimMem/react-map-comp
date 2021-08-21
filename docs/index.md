@@ -1,3 +1,3 @@
-## Hello react-amap!
+#react-map-comp
 
-<code src="../src/Map/demo/index.tsx"></code>
+<code src="../src/AMap/demos/index.tsx"></code>
