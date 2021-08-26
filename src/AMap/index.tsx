@@ -3,8 +3,6 @@ import { useAMapDidLoad } from '../hooks';
 
 interface AMapProps<T> extends React.HTMLAttributes<T> {
   akey: string;
-  zoom?: number;
-  center?: [number, number];
 }
 
 export type TranscriptComponent<ItemT = any> = (
@@ -25,9 +23,6 @@ const Map: TranscriptComponent<HTMLDivElement> = (props, ref) => {
     () => {
       if (finalContainerRef) {
         mapRef.current = new win.AMap.Map(finalContainerRef.current);
-        mapRef.current.on('complete', function () {
-          // 地图图块加载完成后触发
-        });
         if (finalContainerRef.current) {
           finalContainerRef.current['amap'] = mapRef.current;
         }

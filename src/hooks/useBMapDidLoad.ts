@@ -1,6 +1,6 @@
 
 /**
- * 高德地图 hooks文件
+ * 百度地图 hooks文件
  */
 import { useEffect, useRef, useState } from 'react'
 
