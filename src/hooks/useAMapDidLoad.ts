@@ -12,7 +12,6 @@ export interface AMapLoadedAttribute {
 }
 
 const useAMapDidLoad = (didLoadCallback: () => void, { key, uri }: AMapLoadedAttribute) => {
-  const [loaded, setLoaded] = useState(false);
   const loadedTimer = useRef();
   const apiTimer = useRef();
 
@@ -27,7 +26,7 @@ const useAMapDidLoad = (didLoadCallback: () => void, { key, uri }: AMapLoadedAtt
       }, 300);
       return;
     }
-    setLoaded(true);
+    delete win['loadingAMap'];
     didLoadCallback();
   }
 
@@ -47,23 +46,15 @@ const useAMapDidLoad = (didLoadCallback: () => void, { key, uri }: AMapLoadedAtt
 
   const installAMap = () => {
     win['loadingAMap'] = true;
-    win['AMapApiLoaderCallback'] = () => {
-      delete win['loadingAMap'];
-      delete win['AMapApiLoaderCallback'];
-    };
-
-    let url = `//webapi.amap.com/maps?v=1.4.15&key=${key}&callback=AMapApiLoaderCallback`;
+    let url = `//webapi.amap.com/maps?v=1.4.15&key=${key}`;
     if (uri) {
-      url = `${uri}&callback=AMapApiLoaderCallback`;
+      url = uri;
     }
-
     const jsapi = document.createElement('script');
     jsapi.charset = 'utf-8';
     jsapi.src = url;
     document.head.appendChild(jsapi);
-    loadedTimer.current = win.setTimeout(() => {
-      handleLoaded();
-    }, 300);
+    handleLoaded();
   }
 
   useEffect(() => {
@@ -76,15 +67,16 @@ const useAMapDidLoad = (didLoadCallback: () => void, { key, uri }: AMapLoadedAtt
     }
     handleLoaded();
     return () => {
-      if (loadedTimer.current) {
+      if (loadedTimer.current !== null) {
         clearTimeout(loadedTimer.current);
+
       }
       if (apiTimer.current) {
         clearTimeout(apiTimer.current);
       }
+
     }
   }, []);
-  return loaded;
 };
 
 export default useAMapDidLoad;

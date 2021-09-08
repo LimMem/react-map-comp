@@ -2,7 +2,7 @@
 /**
  * 百度地图 hooks文件
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 
 const win = (window as any);
 
@@ -12,13 +12,24 @@ export interface BMapLoadedAttribute {
 }
 
 const useBMapDidLoad = (didLoadCallback: () => void, { ak, uri }: BMapLoadedAttribute) => {
-  const [loaded, setLoaded] = useState(false);
   const loadedTimer = useRef();
   const apiTimer = useRef();
+  const loadRef = useRef(false);
 
   const isLoadReady = () => {
     return !!(win.BMap && win.BMap.Map);
   }
+
+  const loadFinish = useCallback(
+    () => {
+      cancelAllSubscriptions();
+      if (!loadRef.current) {
+        didLoadCallback();
+        loadRef.current = true;
+      }
+    },
+    [ak],
+  );
 
   const handleLoaded = () => {
     if (!isLoadReady()) {
@@ -27,8 +38,7 @@ const useBMapDidLoad = (didLoadCallback: () => void, { ak, uri }: BMapLoadedAttr
       }, 300);
       return;
     }
-    setLoaded(true);
-    didLoadCallback();
+    loadFinish();
   }
 
   const loadApiJS = () => {
@@ -51,7 +61,6 @@ const useBMapDidLoad = (didLoadCallback: () => void, { ak, uri }: BMapLoadedAttr
       delete win['loadingBMap'];
       delete win['BMapApiLoaderCallback'];
     };
-
     let url = `//api.map.baidu.com/api?v=3.0&ak=${ak}&callback=BMapApiLoaderCallback`;
     if (uri) {
       url = `${uri}&callback=BMapApiLoaderCallback`;
@@ -61,29 +70,37 @@ const useBMapDidLoad = (didLoadCallback: () => void, { ak, uri }: BMapLoadedAttr
     jsapi.charset = 'utf-8';
     jsapi.src = url;
     document.head.appendChild(jsapi);
-    loadedTimer.current = win.setTimeout(() => {
-      handleLoaded();
-    }, 300);
+    jsapi.onload = handleLoaded;
   }
+
+  const cancelAllSubscriptions = () => {
+    if (loadedTimer.current) {
+      clearTimeout(loadedTimer.current);
+    }
+    if (apiTimer.current) {
+      clearTimeout(apiTimer.current);
+    }
+    if (win['BMapApiLoaderCallback']) {
+      delete win['BMapApiLoaderCallback'];
+    }
+
+    if (win['loadingBMap']) {
+      delete win['loadingBMap'];
+    }
+  }
+
+  const loadApiJSCB = useCallback(loadApiJS, [ak])
 
   useEffect(() => {
     if (!isLoadReady()) {
       if (!ak) {
-        throw new TypeError('BMap: ak is required');
+        return;
       }
-      loadApiJS();
+      loadApiJSCB();
       return;
     }
-    handleLoaded();
-    return () => {
-      if (loadedTimer.current) {
-        clearTimeout(loadedTimer.current);
-      }
-      if (apiTimer.current) {
-        clearTimeout(apiTimer.current);
-      }
-    }
-  }, []);
-  return loaded;
+    loadFinish();
+    return cancelAllSubscriptions;
+  }, [ak]);
 };
 export default useBMapDidLoad;

@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "react-map-comp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "files": [
     "lib",
     "es",
